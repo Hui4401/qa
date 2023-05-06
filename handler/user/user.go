@@ -5,18 +5,18 @@ import (
 	"github.com/Hui4401/gopkg/logs"
 	"github.com/gin-gonic/gin"
 
+	"github.com/Hui4401/qa/constdef"
 	"github.com/Hui4401/qa/model"
 	"github.com/Hui4401/qa/service/user"
 	sqlModel "github.com/Hui4401/qa/storage/mysql/model"
 	redisModel "github.com/Hui4401/qa/storage/redis/model"
-	"github.com/Hui4401/qa/util/error_code"
 )
 
 // Register 用户注册
 func Register(ctx *gin.Context) (interface{}, error) {
 	req := model.UserRegisterRequest{}
 	if err := ctx.ShouldBind(&req); err != nil {
-		return nil, errors.NewCodeError(error_code.CodeParam)
+		return nil, errors.NewCodeError(constdef.CodeParam)
 	}
 
 	res, err := user.Register(&req)
@@ -31,7 +31,7 @@ func Register(ctx *gin.Context) (interface{}, error) {
 func Login(ctx *gin.Context) (interface{}, error) {
 	req := model.UserLoginRequest{}
 	if err := ctx.ShouldBind(&req); err != nil {
-		return nil, errors.NewCodeError(error_code.CodeParam)
+		return nil, errors.NewCodeError(constdef.CodeParam)
 	}
 
 	res, err := user.Login(&req)
@@ -46,7 +46,7 @@ func Login(ctx *gin.Context) (interface{}, error) {
 func Logout(ctx *gin.Context) (interface{}, error) {
 	token, ok := ctx.Get("token")
 	if !ok {
-		return nil, errors.NewCodeError(error_code.CodeTokenNotFound)
+		return nil, errors.NewCodeError(constdef.CodeTokenNotFound)
 	}
 	jd := redisModel.NewJwtDao()
 	if err := jd.BanToken(ctx, token.(string)); err != nil {
@@ -60,12 +60,12 @@ func Logout(ctx *gin.Context) (interface{}, error) {
 func Profile(ctx *gin.Context) (interface{}, error) {
 	v, ok := ctx.Get("user_id")
 	if !ok {
-		return nil, errors.NewCodeError(error_code.CodeTokenExpired)
+		return nil, errors.NewCodeError(constdef.CodeTokenExpired)
 	}
 	uid, ok := v.(uint)
 	if !ok {
 		logs.CtxErrorKvs(ctx, "uid covert fail, v", v)
-		return nil, errors.NewCodeError(error_code.CodeUnknown)
+		return nil, errors.NewCodeError(constdef.CodeUnknown)
 	}
 	userDao := sqlModel.NewUserDao()
 	userProfile, err := userDao.GetUserProfileByID(uid)
@@ -73,7 +73,7 @@ func Profile(ctx *gin.Context) (interface{}, error) {
 		return nil, err
 	}
 	if userProfile == nil {
-		return nil, errors.NewCodeError(error_code.CodeUserNotExist)
+		return nil, errors.NewCodeError(constdef.CodeUserNotExist)
 	}
 
 	return &model.UserProfileResponse{

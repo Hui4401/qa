@@ -6,10 +6,10 @@ import (
 	"github.com/Hui4401/gopkg/errors"
 	"github.com/dgrijalva/jwt-go"
 
+	"github.com/Hui4401/qa/constdef"
 	"github.com/Hui4401/qa/middleware/auth"
 	"github.com/Hui4401/qa/model"
 	sqlModel "github.com/Hui4401/qa/storage/mysql/model"
-	"github.com/Hui4401/qa/util/error_code"
 )
 
 // Login 用户登录函数
@@ -20,10 +20,10 @@ func Login(req *model.UserLoginRequest) (*model.UserLoginResponse, error) {
 		return nil, err
 	}
 	if user == nil {
-		return nil, errors.NewCodeError(error_code.CodeUserNotExist)
+		return nil, errors.NewCodeError(constdef.CodeUserNotExist)
 	}
 	if !user.CheckPassword(req.Password) {
-		return nil, errors.NewCodeError(error_code.CodePasswordError)
+		return nil, errors.NewCodeError(constdef.CodePasswordError)
 	}
 
 	token, err := generateToken(user.ID)

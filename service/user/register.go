@@ -6,9 +6,9 @@ import (
 
 	"github.com/Hui4401/gopkg/errors"
 
+	"github.com/Hui4401/qa/constdef"
 	"github.com/Hui4401/qa/model"
 	sqlModel "github.com/Hui4401/qa/storage/mysql/model"
-	"github.com/Hui4401/qa/util/error_code"
 )
 
 func Register(req *model.UserRegisterRequest) (*model.UserRegisterResponse, error) {
@@ -46,7 +46,7 @@ func Register(req *model.UserRegisterRequest) (*model.UserRegisterResponse, erro
 func registerValid(req *model.UserRegisterRequest) error {
 	// 两次输入密码不一致
 	if req.PasswordConfirm != req.Password {
-		return errors.NewCodeError(error_code.CodePasswordConfirmError)
+		return errors.NewCodeError(constdef.CodePasswordConfirmError)
 	}
 	// 用户名已存在
 	ud := sqlModel.NewUserDao()
@@ -55,7 +55,7 @@ func registerValid(req *model.UserRegisterRequest) error {
 		return err
 	}
 	if user != nil {
-		return errors.NewCodeError(error_code.CodeUserExist)
+		return errors.NewCodeError(constdef.CodeUserExist)
 	}
 
 	return nil

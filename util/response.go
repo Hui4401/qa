@@ -3,7 +3,7 @@ package util
 import (
 	"github.com/Hui4401/gopkg/errors"
 
-	"github.com/Hui4401/qa/util/error_code"
+	"github.com/Hui4401/qa/constdef"
 )
 
 type Response struct {
@@ -14,8 +14,8 @@ type Response struct {
 
 func OkResponse(data interface{}) *Response {
 	return &Response{
-		Code: error_code.CodeOk,
-		Msg:  errors.GetErrorMsgByCode(error_code.CodeOk),
+		Code: constdef.CodeOk,
+		Msg:  errors.GetErrorMsgByCode(constdef.CodeOk),
 		Data: data,
 	}
 }

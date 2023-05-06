@@ -7,9 +7,9 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 
+	"github.com/Hui4401/qa/constdef"
 	redisModel "github.com/Hui4401/qa/storage/redis/model"
 	"github.com/Hui4401/qa/util"
-	"github.com/Hui4401/qa/util/error_code"
 )
 
 const (
@@ -30,7 +30,7 @@ func JwtAuthRequired() gin.HandlerFunc {
 
 		// 判断请求头中是否有token
 		if userToken == "" {
-			ctx.JSON(http.StatusOK, util.ErrorResponseByCode(error_code.CodeTokenNotFound))
+			ctx.JSON(http.StatusOK, util.ErrorResponseByCode(constdef.CodeTokenNotFound))
 			ctx.Abort()
 			return
 		}
@@ -41,7 +41,7 @@ func JwtAuthRequired() gin.HandlerFunc {
 		})
 		if err != nil || token.Valid != true {
 			// 过期或者token不正确
-			ctx.JSON(http.StatusOK, util.ErrorResponseByCode(error_code.CodeTokenExpired))
+			ctx.JSON(http.StatusOK, util.ErrorResponseByCode(constdef.CodeTokenExpired))
 			ctx.Abort()
 			return
 		}
@@ -49,7 +49,7 @@ func JwtAuthRequired() gin.HandlerFunc {
 		// 判断token是否已退出登录
 		jd := redisModel.NewJwtDao()
 		if jd.IsBanedToken(ctx, token.Raw) {
-			ctx.JSON(http.StatusOK, util.ErrorResponseByCode(error_code.CodeTokenExpired))
+			ctx.JSON(http.StatusOK, util.ErrorResponseByCode(constdef.CodeTokenExpired))
 			ctx.Abort()
 			return
 		}
