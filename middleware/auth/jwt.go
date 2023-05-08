@@ -2,19 +2,17 @@ package auth
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 
 	"github.com/Hui4401/qa/constdef"
-	redisModel "github.com/Hui4401/qa/storage/redis/model"
+	"github.com/Hui4401/qa/storage"
 	"github.com/Hui4401/qa/util"
 )
 
 const (
-	JwtSecretKey   = "a random key"
-	JwtExpiredTime = time.Hour * 24 * 7
+	JwtSecretKey = "a random key"
 )
 
 type JwtClaim struct {
@@ -46,18 +44,17 @@ func JwtAuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		// 判断token是否已退出登录
-		jd := redisModel.NewJwtDao()
-		if jd.IsBanedToken(ctx, token.Raw) {
+		// 判断token是否有效
+		if !storage.CheckUserToken(ctx, token.Raw) {
 			ctx.JSON(http.StatusOK, util.ErrorResponseByCode(constdef.CodeTokenExpired))
 			ctx.Abort()
 			return
 		}
 
-		// context保存token信息
+		// context保存用户信息
 		if jwtStruct, ok := token.Claims.(*JwtClaim); ok {
-			ctx.Set("user_id", jwtStruct.UserID)
+			ctx.Set(constdef.CtxUserID, jwtStruct.UserID)
 		}
-		ctx.Set("token", token.Raw)
+		ctx.Set(constdef.CtxUserToken, token.Raw)
 	}
 }

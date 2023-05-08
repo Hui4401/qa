@@ -10,9 +10,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/Hui4401/qa/constdef"
-	"github.com/Hui4401/qa/storage/mysql"
-	sqlModel "github.com/Hui4401/qa/storage/mysql/model"
-	"github.com/Hui4401/qa/storage/redis"
+	"github.com/Hui4401/qa/storage"
 )
 
 func Init() {
@@ -35,7 +33,5 @@ func Init() {
 	errors.SetUnknownMsg(constdef.MsgMap[constdef.CodeUnknown])
 	errors.SetCode2MsgMap(constdef.MsgMap)
 
-	mysql.InitMySQL(os.Getenv("MYSQL_URL"))
-	sqlModel.AutoMigrate()
-	redis.InitRedis(os.Getenv("REDIS_URL"))
+	storage.InitStorage(os.Getenv("MYSQL_URL"), os.Getenv("REDIS_URL"))
 }

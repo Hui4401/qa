@@ -2,32 +2,37 @@ package model
 
 import (
 	"context"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 
 	localRedis "github.com/Hui4401/qa/storage/redis"
 )
 
-type jwtDao struct {
+type JwtDao struct {
 	redisClient *redis.Client
 }
 
-func NewJwtDao() *jwtDao {
-	return &jwtDao{
+func NewJwtDao() *JwtDao {
+	return &JwtDao{
 		redisClient: localRedis.GetClient(),
 	}
 }
 
-func makeJwtBanedKey() string {
-	return "jwt:baned"
+func makeJwtBanedKey(token string) string {
+	return "token-baned:" + token
 }
 
-func (d *jwtDao) BanToken(ctx context.Context, token string) error {
-	key := makeJwtBanedKey()
-	return d.redisClient.SAdd(ctx, key, token).Err()
+func (d *JwtDao) BanToken(ctx context.Context, token string, expireTime time.Duration) error {
+	key := makeJwtBanedKey(token)
+	return d.redisClient.Set(ctx, key, nil, expireTime).Err()
 }
 
-func (d *jwtDao) IsBanedToken(ctx context.Context, token string) bool {
-	key := makeJwtBanedKey()
-	return d.redisClient.SIsMember(ctx, key, token).Val()
+func (d *JwtDao) IsBanedToken(ctx context.Context, token string) bool {
+	key := makeJwtBanedKey(token)
+	if count := d.redisClient.Exists(ctx, key).Val(); count > 0 {
+		return true
+	}
+
+	return false
 }

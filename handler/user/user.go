@@ -8,8 +8,7 @@ import (
 	"github.com/Hui4401/qa/constdef"
 	"github.com/Hui4401/qa/model"
 	"github.com/Hui4401/qa/service/user"
-	sqlModel "github.com/Hui4401/qa/storage/mysql/model"
-	redisModel "github.com/Hui4401/qa/storage/redis/model"
+	"github.com/Hui4401/qa/storage"
 )
 
 // Register 用户注册
@@ -19,7 +18,7 @@ func Register(ctx *gin.Context) (interface{}, error) {
 		return nil, errors.NewCodeError(constdef.CodeParam)
 	}
 
-	res, err := user.Register(&req)
+	res, err := user.Register(ctx, &req)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +33,7 @@ func Login(ctx *gin.Context) (interface{}, error) {
 		return nil, errors.NewCodeError(constdef.CodeParam)
 	}
 
-	res, err := user.Login(&req)
+	res, err := user.Login(ctx, &req)
 	if err != nil {
 		return nil, err
 	}
@@ -44,43 +43,42 @@ func Login(ctx *gin.Context) (interface{}, error) {
 
 // Logout 退出登录
 func Logout(ctx *gin.Context) (interface{}, error) {
-	token, ok := ctx.Get("token")
+	token, ok := ctx.Get(constdef.CtxUserToken)
 	if !ok {
 		return nil, errors.NewCodeError(constdef.CodeTokenNotFound)
 	}
-	jd := redisModel.NewJwtDao()
-	if err := jd.BanToken(ctx, token.(string)); err != nil {
+	if err := storage.BanUserToken(ctx, token.(string), constdef.UserTokenExpiredTime); err != nil {
 		return nil, err
 	}
 
 	return nil, nil
 }
 
-// Profile 查看当前登录用户个人基本信息
+// Profile 查看当前登录用户个人资料
 func Profile(ctx *gin.Context) (interface{}, error) {
-	v, ok := ctx.Get("user_id")
+	v, ok := ctx.Get(constdef.CtxUserID)
 	if !ok {
 		return nil, errors.NewCodeError(constdef.CodeTokenExpired)
 	}
-	uid, ok := v.(uint)
+	userID, ok := v.(uint)
 	if !ok {
-		logs.CtxErrorKvs(ctx, "uid covert fail, v", v)
+		logs.CtxErrorKvs(ctx, "userID covert fail, v", v)
 		return nil, errors.NewCodeError(constdef.CodeUnknown)
 	}
-	userDao := sqlModel.NewUserDao()
-	userProfile, err := userDao.GetUserProfileByID(uid)
+
+	userInfo, err := storage.GetUserInfoByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
-	if userProfile == nil {
+	if userInfo == nil {
 		return nil, errors.NewCodeError(constdef.CodeUserNotExist)
 	}
 
 	return &model.UserProfileResponse{
-		Id:          userProfile.ID,
-		Nickname:    userProfile.Nickname,
-		Email:       userProfile.Email,
-		Avatar:      userProfile.Avatar,
-		Description: userProfile.Description,
+		Username:    userInfo.Username,
+		Email:       userInfo.Email,
+		Nickname:    userInfo.Nickname,
+		Avatar:      userInfo.Avatar,
+		Description: userInfo.Description,
 	}, err
 }

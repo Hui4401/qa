@@ -20,9 +20,9 @@ type UserLoginResponse struct {
 }
 
 type UserProfileResponse struct {
-	Id          uint   `json:"id"`
-	Nickname    string `json:"nickname"`
+	Username    string `json:"username"`
 	Email       string `json:"email"`
+	Nickname    string `json:"nickname"`
 	Avatar      string `json:"avatar"`
 	Description string `json:"description"`
 }

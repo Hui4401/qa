@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"time"
 
 	"github.com/Hui4401/gopkg/errors"
@@ -9,24 +10,21 @@ import (
 	"github.com/Hui4401/qa/constdef"
 	"github.com/Hui4401/qa/middleware/auth"
 	"github.com/Hui4401/qa/model"
-	sqlModel "github.com/Hui4401/qa/storage/mysql/model"
+	"github.com/Hui4401/qa/storage"
 )
 
 // Login 用户登录函数
-func Login(req *model.UserLoginRequest) (*model.UserLoginResponse, error) {
-	ud := sqlModel.NewUserDao()
-	user, err := ud.GetUserByUsername(req.Username)
-	if err != nil {
-		return nil, err
-	}
-	if user == nil {
-		return nil, errors.NewCodeError(constdef.CodeUserNotExist)
-	}
-	if !user.CheckPassword(req.Password) {
+func Login(ctx context.Context, req *model.UserLoginRequest) (*model.UserLoginResponse, error) {
+	if !storage.CheckUserPassword(ctx, req.Username, req.Password) {
 		return nil, errors.NewCodeError(constdef.CodePasswordError)
 	}
 
-	token, err := generateToken(user.ID)
+	user, err := storage.GetUserInfoByUsername(ctx, req.Username)
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := generateToken(user.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -36,13 +34,13 @@ func Login(req *model.UserLoginRequest) (*model.UserLoginResponse, error) {
 	}, nil
 }
 
-func generateToken(uid uint) (string, error) {
+func generateToken(userID uint) (string, error) {
 	claim := auth.JwtClaim{
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(auth.JwtExpiredTime).Unix(),
+			ExpiresAt: time.Now().Add(constdef.UserTokenExpiredTime).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
-		UserID: uid,
+		UserID: userID,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
 

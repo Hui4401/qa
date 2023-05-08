@@ -14,20 +14,14 @@ const (
 
 type User struct {
 	gorm.Model
-	Username    string       // 用户名
-	Password    string       // 密码
-	UserProfile *UserProfile `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"` // 关联用户信息
-	Questions   []Question   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"` // 关联问题信息
-	Answers     []Answer     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"` // 关联回答信息
-}
-
-type UserProfile struct {
-	gorm.Model
-	UserID      uint
-	Nickname    string // 昵称
-	Email       string // 邮箱
-	Avatar      string // 头像
-	Description string // 个人描述
+	Username    string     // 用户名
+	Password    string     // 密码
+	Email       string     // 邮箱
+	Nickname    string     // 昵称
+	Avatar      string     // 头像
+	Description string     // 个人描述
+	Questions   []Question `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"` // 关联问题信息
+	Answers     []Answer   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"` // 关联回答信息
 }
 
 type UserDao struct {
@@ -49,9 +43,9 @@ func (d *UserDao) CreateUser(u *User) error {
 }
 
 // GetUserByID 没有记录时返回 nil, nil
-func (d *UserDao) GetUserByID(ID uint) (*User, error) {
+func (d *UserDao) GetUserByID(id uint) (*User, error) {
 	user := &User{}
-	res := d.sqlClient.First(user, ID)
+	res := d.sqlClient.First(user, id)
 	if res.Error == gorm.ErrRecordNotFound {
 		return nil, nil
 	}
@@ -89,30 +83,4 @@ func (user *User) SetPassword(password string) error {
 func (user *User) CheckPassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	return err == nil
-}
-
-func (d *UserDao) GetUserProfileByID(ID interface{}) (*UserProfile, error) {
-	profile := &UserProfile{}
-	res := d.sqlClient.Where("user_id = ?", ID).First(profile)
-	if res.Error == gorm.ErrRecordNotFound {
-		return nil, nil
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-
-	return profile, nil
-}
-
-func (d *UserDao) GetUserProfileByUsername(username string) (*UserProfile, error) {
-	profile := &UserProfile{}
-	res := d.sqlClient.Where("username = ?", username).First(profile)
-	if res.Error == gorm.ErrRecordNotFound {
-		return nil, nil
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-
-	return profile, nil
 }
